@@ -23,6 +23,14 @@ The insights derived from this project can serve as a model for other companies 
 
 - [Business Questions](#business-questions)
 
+    - [Revenue Analysis](#revenue-analysis)
+
+    - [Products Analysis](#products-analysis)
+
+    - [Customers Analysis](#customers-analysis)
+
+    - [Employees Analysis](#employees-analysis)
+
 - [Running the Project](#running-the-project)
 
 
@@ -71,7 +79,95 @@ The Northwind database used in this project is sourced from this [repository](ht
 
 ## Business Questions
 
+This section presents a series of key business questions designed to analyze the data in the Northwind database and generate insights that are valuable for informed decision-making.
+
+The analysis is conducted across several business dimensions, including **revenue**, **products**, **customers**, and **employees**. Each dimension includes specific business questions, followed by their answers, the complete SQL queries used to derive these answers, and an alternative SQL command that queries a pre-created view for each question.
+
+
+### Revenue Analysis
+
+**1. How does the monthly revenue evolve over time?**
+
+To answer this question, we calculate the monthly revenue along with the percentage variation from the previous month. Additionally, we compute the cumulative Year-to-Date (YTD) revenue. A sample of the results is presented in the table below.
+
+| Year | Month | Revenue   | Variation (%) | YTD Revenue  |
+|:----:|:-----:|:---------:|:-------------:|:------------:|
+| 1996 | 7     | 27861.90  | -             | 27861.90     |
+| 1996 | 8     | 25485.28  | -8.53         | 53347.18     |
+| ...  | ...   | ...       | ...           | ...          |
+| 1996 | 12    | 45239.63  | -0.79         | 208083.98    |
+| 1997 | 1     | 61258.07  | 35.41         | 61258.07     |
+| ...  | ...   | ...       | ...           | ...          |
+| 1997 | 12    | 71398.43  | 64.01         | 617085.20    |
+| 1998 | 1     | 94222.11  | 31.97         | 94222.11     |
+| ...  | ...   | ...       | ...           | ...          |
+| 1998 | 5     | 18333.63  | -85.19        | 440623.87    |
+
+<details>
+<summary><b>Full SQL Query</b></summary>
+
+```sql
+WITH monthly_revenue AS
+(
+    SELECT
+        EXTRACT(YEAR FROM o.order_date) AS year,
+        EXTRACT(MONTH FROM o.order_date) AS month,
+        ROUND(
+            SUM(od.quantity * od.unit_price * (1.0 - od.discount))::numeric, 2
+        ) AS revenue
+
+    FROM
+        order_details od
+        JOIN orders o ON od.order_id = o.order_id
+
+    GROUP BY
+        year,
+        month
+)
+
+SELECT
+    year AS "Year",
+    month AS "Month",
+    revenue AS "Revenue",
+    ROUND(
+        (revenue - LAG(revenue) OVER (ORDER BY year, month)) /
+        LAG(revenue) OVER (ORDER BY year, month) * 100, 2
+    ) AS "Variation (%)",
+    SUM(revenue) OVER (
+        PARTITION BY year
+        ORDER BY month
+    ) AS "YTD Revenue"
+
+FROM
+    monthly_revenue
+```
+</details>
+
+<details>
+<summary><b>View Query</b></summary>
+
+```sql
+SELECT *
+FROM vw_monthly_revenue_analysis
+```
+</details>
+
+
+### Products Analysis
+
 TODO
+
+
+### Customers Analysis
+
+TODO
+
+
+### Employees Analysis
+
+TODO
+
+[⬆️ Back to navigation](#quick-navigation)
 
 ## Running the Project
 
