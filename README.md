@@ -33,7 +33,6 @@ The insights derived from this project can serve as a model for other companies 
 
 - [Running the Project](#running-the-project)
 
-
 ## About the Database
 
 The [Northwind database](https://github.com/Microsoft/sql-server-samples/tree/master/samples/databases/northwind-pubs) is a classic dataset originally created by Microsoft to showcase the features of their relational database systems. It represents a fictional company, **Northwind Traders**, which imports and exports food and beverage products worldwide.
@@ -90,18 +89,18 @@ The analysis is conducted across several business dimensions, including **revenu
 
 To answer this question, we calculate the monthly revenue along with the percentage variation from the previous month. Additionally, we compute the cumulative Year-to-Date (YTD) revenue. A sample of the results is presented in the table below.
 
-| Year | Month | Revenue   | Variation (%) | YTD Revenue  |
-|:----:|:-----:|:---------:|:-------------:|:------------:|
-| 1996 | 7     | 27861.90  | -             | 27861.90     |
-| 1996 | 8     | 25485.28  | -8.53         | 53347.18     |
-| ...  | ...   | ...       | ...           | ...          |
-| 1996 | 12    | 45239.63  | -0.79         | 208083.98    |
-| 1997 | 1     | 61258.07  | 35.41         | 61258.07     |
-| ...  | ...   | ...       | ...           | ...          |
-| 1997 | 12    | 71398.43  | 64.01         | 617085.20    |
-| 1998 | 1     | 94222.11  | 31.97         | 94222.11     |
-| ...  | ...   | ...       | ...           | ...          |
-| 1998 | 5     | 18333.63  | -85.19        | 440623.87    |
+| Year | Month | Revenue   | Variation (%) | YTD Revenue |
+|:----:|:-----:|----------:|--------------:|------------:|
+| 1996 | 7     | 27,861.90 | -             | 27,861.90   |
+| 1996 | 8     | 25,485.28 | -8.53         | 53,347.18   |
+| ...  | ...   | ...       | ...           | ...         |
+| 1996 | 12    | 45,239.63 | -0.79         | 208,083.98  |
+| 1997 | 1     | 61,258.07 | 35.41         | 61,258.07   |
+| ...  | ...   | ...       | ...           | ...         |
+| 1997 | 12    | 71,398.43 | 64.01         | 617,085.20  |
+| 1998 | 1     | 94,222.11 | 31.97         | 94,222.11   |
+| ...  | ...   | ...       | ...           | ...         |
+| 1998 | 5     | 18,333.63 | -85.19        | 440,623.87  |
 
 <details>
 <summary><b>Full SQL Query</b></summary>
@@ -139,7 +138,7 @@ SELECT
     ) AS "YTD Revenue"
 
 FROM
-    monthly_revenue
+    monthly_revenue;
 ```
 </details>
 
@@ -148,7 +147,72 @@ FROM
 
 ```sql
 SELECT *
-FROM vw_monthly_revenue_analysis
+FROM vw_monthly_revenue_analysis;
+```
+</details>
+
+---
+
+**2. Which are the top 5 months with the highest average monthly revenue?**
+
+To accurately answer this question, we first compute the total revenue for each month across all years. Then, we calculate the average revenue for each month and sort the results to identify the top 5 months with the highest average revenue. The results are displayed in the table below.
+
+The results suggest that Northwind Traders experiences its highest average revenues during the early months of the year and around the holiday season, pointing to potential opportunities for targeted marketing and inventory planning during these periods.
+
+| Month | Average Revenue |
+|:-----:|----------------:|
+| 4     | 88,415.82       |
+| 1     | 77,740.09       |
+| 3     | 71,700.69       |
+| 2     | 68,949.46       |
+| 12    | 58,319.03       |
+
+
+<details>
+<summary><b>Full SQL Query</b></summary>
+
+```sql
+WITH monthly_revenue AS
+(
+    SELECT
+        EXTRACT(YEAR FROM o.order_date) AS year,
+        EXTRACT(MONTH FROM o.order_date) AS month,
+        ROUND(
+            SUM(od.quantity * od.unit_price * (1.0 - od.discount))::numeric, 2
+        ) AS revenue
+
+    FROM
+        order_details od
+        JOIN orders o ON od.order_id = o.order_id
+
+    GROUP BY
+        year,
+        month
+)
+
+SELECT
+    month AS "Month",
+   	ROUND(AVG(revenue), 2) AS "Average Revenue"
+
+FROM
+    monthly_revenue
+
+GROUP BY
+    month
+
+ORDER BY
+    avg_revenue DESC
+
+LIMIT 5;
+```
+</details>
+
+<details>
+<summary><b>View Query</b></summary>
+
+```sql
+SELECT *
+FROM vw_top_5_avg_monthly_revenue;
 ```
 </details>
 
