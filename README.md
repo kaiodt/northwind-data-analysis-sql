@@ -192,7 +192,7 @@ WITH monthly_revenue AS
 
 SELECT
     month AS "Month",
-   	ROUND(AVG(revenue), 2) AS "Average Revenue"
+       ROUND(AVG(revenue), 2) AS "Average Revenue"
 
 FROM
     monthly_revenue
@@ -219,7 +219,132 @@ FROM vw_top_5_avg_monthly_revenue;
 
 ### Products Analysis
 
-TODO
+**3. Which are the top 5 best-selling products by quantity, and what categories do they belong to?**
+
+To answer this question, we first identify the top 5 products with the highest total quantity sold across all orders. Next, we categorize these products to understand which types of goods are driving the most sales. The results are summarized in the table below.
+
+The analysis reveals that **Dairy Products**, particularly cheese items, dominate the top 5 best-sellers, occupying the first three positions. **Grains/Cereals** and **Confections** also exhibit significant customer demand, though not as strong as dairy products. Overall, the best-selling items fall within the food category. This insight can inform inventory management, marketing strategies, and promotional efforts, with a particular focus on the dairy category.
+
+| Product                 | Category        | Total Quantity Sold |
+|:------------------------|:----------------|--------------------:|
+| Camembert Pierrot       | Dairy Products  | 1,577               |
+| Raclette Courdavault    | Dairy Products  | 1,496               |
+| Gorgonzola Telino       | Dairy Products  | 1,397               |
+| Gnocchi di nonna Alice  | Grains/Cereals  | 1,263               |
+| Pavlova                 | Confections     | 1,158               |
+
+
+<details>
+<summary><b>Full SQL Query</b></summary>
+
+```sql
+WITH top_5_products_sales AS
+(
+    SELECT
+        product_id,
+        SUM(quantity) AS total_quantity
+
+    FROM
+        order_details
+
+    GROUP BY
+        product_id
+
+    ORDER BY
+        total_quantity DESC
+
+    LIMIT 5
+)
+
+SELECT
+    p.product_name AS "Product",
+    c.category_name AS "Category",
+    t.total_quantity AS "Total Quantity Sold"
+
+FROM
+    top_5_products_sales t
+    JOIN products p ON t.product_id = p.product_id
+    JOIN categories c ON p.category_id = c.category_id
+
+ORDER BY
+    t.total_quantity DESC;
+```
+</details>
+
+<details>
+<summary><b>View Query</b></summary>
+
+```sql
+SELECT *
+FROM vw_top_5_selling_products;
+```
+</details>
+
+---
+
+**4. Which are the top 5 products generating the highest revenue, and what categories do they belong to?**
+
+To answer this question, we first identify the top 5 products with the highest total revenue and categorize them accordingly. We then examine the total quantity sold and the unit price of these products to gain further insights into their performance. The results are presented in the table below.
+
+The results show that a **Beverages** product leads in revenue generation, primarily due to its high unit price. A **Meat/Poultry** product follows in second place, also driven by a relatively high unit price. Despite their lower unit prices, **Dairy Products** appear in the top 5 due to their high sales volumes. **Confections** also contribute significantly to overall revenue. These findings can inform strategies for pricing, marketing, and inventory management, particularly focusing on high-revenue products.
+
+| Product                 | Category       | Total Revenue | Total Quantity Sold | Unit Price |
+|:------------------------|:---------------|--------------:|--------------------:|-----------:|
+| Côte de Blaye           | Beverages      | 141,396.74    | 623                 | 263.50     |
+| Thüringer Rostbratwurst | Meat/Poultry   | 80,368.67     | 746                 | 123.79     |
+| Raclette Courdavault    | Dairy Products | 71,155.70     | 1,496               | 55.00      |
+| Tarte au sucre          | Confections    | 47,234.97     | 1,083               | 49.30      |
+| Camembert Pierrot       | Dairy Products | 46,825.48     | 1,577               | 34.00      |
+
+<details>
+<summary><b>Full SQL Query</b></summary>
+
+```sql
+WITH top_5_products_revenue AS
+(
+    SELECT
+        product_id,
+        SUM(quantity * unit_price * (1.0 - discount)) AS total_revenue,
+        SUM(quantity) AS total_quantity
+
+    FROM
+        order_details
+
+    GROUP BY
+        product_id
+
+    ORDER BY
+        total_revenue DESC
+
+    LIMIT 5
+)
+
+SELECT
+    p.product_name AS "Product",
+    c.category_name AS "Category",
+    ROUND(t.total_revenue::numeric, 2) AS "Total Revenue",
+    t.total_quantity AS "Total Quantity Sold",
+    ROUND(p.unit_price::numeric, 2) AS "Unit Price"
+
+FROM
+    top_5_products_revenue t
+    JOIN products p ON t.product_id = p.product_id
+    JOIN categories c ON p.category_id = c.category_id
+
+ORDER BY
+    t.total_revenue DESC;
+```
+
+</details>
+
+<details>
+<summary><b>View Query</b></summary>
+
+```sql
+SELECT *
+FROM vw_top_5_revenue_products;
+```
+</details>
 
 
 ### Customers Analysis
