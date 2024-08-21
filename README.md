@@ -1,6 +1,6 @@
 # Northwind Database Analysis with SQL
 
-## Overview
+# Overview
 
 The goal of this project is to analyze sales data from the [Northwind database](https://github.com/Microsoft/sql-server-samples/tree/master/samples/databases/northwind-pubs), a classic dataset representing a fictional company, **Northwind Traders**, which operates in the food and beverage industry on an international scale.
 
@@ -9,7 +9,7 @@ This analysis is conducted using [PostgreSQL](https://www.postgresql.org/), host
 The insights derived from this project can serve as a model for other companies looking to generate meaningful reports and enhance their strategic decisions.
 
 
-## Quick Navigation
+# Quick Navigation
 
 - [Overview](#overview)
 
@@ -33,14 +33,15 @@ The insights derived from this project can serve as a model for other companies 
 
 - [Running the Project](#running-the-project)
 
-## About the Database
+
+# About the Database
 
 The [Northwind database](https://github.com/Microsoft/sql-server-samples/tree/master/samples/databases/northwind-pubs) is a classic dataset originally created by Microsoft to showcase the features of their relational database systems. It represents a fictional company, **Northwind Traders**, which imports and exports food and beverage products worldwide.
 
 The structured nature of the Northwind database, along with its realistic representation of business operations, makes it an excellent case study for demonstrating data analysis and SQL concepts. The insights derived from this analysis can be applied to similar datasets, helping businesses enhance their decision-making processes and overall performance.
 
 
-### Database Schema
+## Database Schema
 
 The Northwind database contains several tables that capture various aspects of the business, such as customers, orders, products, employees, and suppliers. The key tables and their relationships are outlined below:
 
@@ -61,7 +62,7 @@ The Northwind database contains several tables that capture various aspects of t
 - **Shippers**: Records the shipping companies used to deliver orders to customers.
 
 
-### Entity-Relationship (ER) Diagram
+## Entity-Relationship (ER) Diagram
 
 The Entity-Relationship (ER) diagram of the Northwind database illustrates the relationships between the different tables. Below is a visual representation:
 
@@ -70,22 +71,23 @@ The Entity-Relationship (ER) diagram of the Northwind database illustrates the r
 </p>
 
 
-### Database Source
+## Database Source
 
 The Northwind database used in this project is sourced from this [repository](https://github.com/pthom/northwind_psql), which provides a [SQL script](https://github.com/pthom/northwind_psql/blob/master/northwind.sql) to create all tables, relationships, and populate data in a PostgreSQL database management system.
 
 [⬆️ Back to navigation](#quick-navigation)
 
-## Business Questions
+
+# Business Questions
 
 This section presents a series of key business questions designed to analyze the data in the Northwind database and generate insights that are valuable for informed decision-making.
 
 The analysis is conducted across several business dimensions, including **revenue**, **products**, **customers**, and **employees**. Each dimension includes specific business questions, followed by their answers, the complete SQL queries used to derive these answers, and an alternative SQL command that queries a pre-created view for each question.
 
 
-### Revenue Analysis
+## Revenue Analysis
 
-**1. How does the monthly revenue evolve over time?**
+### 1. How does the monthly revenue evolve over time?
 
 To answer this question, we calculate the monthly revenue along with the percentage variation from the previous month. Additionally, we compute the cumulative Year-to-Date (YTD) revenue. A sample of the results is presented in the table below.
 
@@ -153,7 +155,7 @@ FROM vw_monthly_revenue_analysis;
 
 ---
 
-**2. Which are the top 5 months with the highest average monthly revenue?**
+### 2. Which are the top 5 months with the highest average monthly revenue?
 
 To accurately answer this question, we first compute the total revenue for each month across all years. Then, we calculate the average revenue for each month and sort the results to identify the top 5 months with the highest average revenue. The results are displayed in the table below.
 
@@ -166,7 +168,6 @@ The results suggest that Northwind Traders experiences its highest average reven
 | 3     | 71,700.69       |
 | 2     | 68,949.46       |
 | 12    | 58,319.03       |
-
 
 <details>
 <summary><b>Full SQL Query</b></summary>
@@ -217,9 +218,9 @@ FROM vw_top_5_avg_monthly_revenue;
 </details>
 
 
-### Products Analysis
+## Products Analysis
 
-**3. Which are the top 5 best-selling products by quantity, and what categories do they belong to?**
+### 3. Which are the top 5 best-selling products by quantity, and what categories do they belong to?
 
 To answer this question, we first identify the top 5 products with the highest total quantity sold across all orders. Next, we categorize these products to understand which types of goods are driving the most sales. The results are summarized in the table below.
 
@@ -232,7 +233,6 @@ The analysis reveals that **Dairy Products**, particularly cheese items, dominat
 | Gorgonzola Telino       | Dairy Products  | 1,397               |
 | Gnocchi di nonna Alice  | Grains/Cereals  | 1,263               |
 | Pavlova                 | Confections     | 1,158               |
-
 
 <details>
 <summary><b>Full SQL Query</b></summary>
@@ -282,7 +282,7 @@ FROM vw_top_5_selling_products;
 
 ---
 
-**4. Which are the top 5 products generating the highest revenue, and what categories do they belong to?**
+### 4. Which are the top 5 products generating the highest revenue, and what categories do they belong to?
 
 To answer this question, we first identify the top 5 products with the highest total revenue and categorize them accordingly. We then examine the total quantity sold and the unit price of these products to gain further insights into their performance. The results are presented in the table below.
 
@@ -334,7 +334,6 @@ FROM
 ORDER BY
     t.total_revenue DESC;
 ```
-
 </details>
 
 <details>
@@ -347,17 +346,17 @@ FROM vw_top_5_revenue_products;
 </details>
 
 
-### Customers Analysis
+## Customers Analysis
 
 TODO
 
 
-### Employees Analysis
+## Employees Analysis
 
 TODO
 
 [⬆️ Back to navigation](#quick-navigation)
 
-## Running the Project
+# Running the Project
 
 TODO
