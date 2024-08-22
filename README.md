@@ -348,7 +348,166 @@ FROM vw_top_5_revenue_products;
 
 ## Customers Analysis
 
-TODO
+### 5. Who are the top 5 customers by yearly revenue share, and how does their contribution compare across different years?
+
+To answer this question, we identify the top 5 customers with the highest total revenue in each year. We then calculate each customer’s contribution as a percentage of the total yearly revenue to understand their relative importance to the business over time. The results are displayed in the table below.
+
+The analysis reveals that certain customers, such as **Ernst Handel**, **QUICK-Stop**, and **Save-a-lot Markets**, consistently appear among the top contributors across multiple years. These customers account for a significant portion of Northwind's yearly revenue, emphasizing their importance. This information can help prioritize customer relationship management and tailor services to maintain and potentially increase their business.
+
+| Year | Customer                      | Yearly Revenue | Total Year Revenue Share (%) |
+|:----:|:------------------------------|---------------:|-----------------------------:|
+| 1996 | Ernst Handel                  | 15,568.07      | 7.48                         |
+| 1996 | QUICK-Stop                    | 11,950.08      | 5.74                         |
+| 1996 | Rattlesnake Canyon Grocery    | 10,475.78      | 5.03                         |
+| 1996 | Save-a-lot Markets            | 10,338.26      | 4.97                         |
+| 1996 | Piccolo und mehr              | 10,033.28      | 4.82                         |
+| 1997 | QUICK-Stop                    | 61,109.91      | 9.90                         |
+| 1997 | Save-a-lot Markets            | 57,713.57      | 9.35                         |
+| 1997 | Ernst Handel                  | 48,096.26      | 7.79                         |
+| 1997 | Mère Paillarde                | 23,332.31      | 3.78                         |
+| 1997 | Hungry Owl All-Night Grocers  | 20,454.40      | 3.31                         |
+| 1998 | Ernst Handel                  | 41,210.65      | 9.35                         |
+| 1998 | QUICK-Stop                    | 37,217.31      | 8.45                         |
+| 1998 | Save-a-lot Markets            | 36,310.11      | 8.24                         |
+| 1998 | Hanari Carnes                 | 23,821.20      | 5.41                         |
+| 1998 | Rattlesnake Canyon Grocery    | 21,238.27      | 4.82                         |
+
+<details>
+<summary><b>Full SQL Query</b></summary>
+
+```sql
+WITH yearly_ranked_customers AS
+(
+    SELECT
+        EXTRACT(YEAR FROM o.order_date) AS year,
+        o.customer_id,
+        SUM(od.quantity * od.unit_price * (1.0 - od.discount)) AS total_customer_revenue,
+        RANK() OVER (
+            PARTITION BY EXTRACT(YEAR FROM o.order_date)
+            ORDER BY SUM(od.quantity * od.unit_price * (1.0 - od.discount)) DESC
+        ) AS rank_revenue,
+        SUM(SUM(od.quantity * od.unit_price * (1.0 - od.discount))) OVER (
+            PARTITION BY EXTRACT(YEAR FROM o.order_date)
+        ) AS total_year_revenue
+
+    FROM
+        order_details od
+        JOIN orders o ON od.order_id = o.order_id
+
+    GROUP BY
+        year,
+        o.customer_id
+)
+
+SELECT
+    yrc.year AS "Year",
+    c.company_name AS "Customer",
+    ROUND(yrc.total_customer_revenue::numeric, 2) AS "Yearly Revenue",
+    ROUND(
+        (yrc.total_customer_revenue / yrc.total_year_revenue * 100)::numeric, 2
+    ) AS "Total Year Revenue Share (%)"
+
+FROM
+    yearly_ranked_customers yrc
+    JOIN customers c ON yrc.customer_id = c.customer_id
+
+WHERE
+    yrc.rank_revenue <= 5
+
+ORDER BY
+    yrc.year,
+    yrc.rank_revenue;
+```
+</details>
+
+<details>
+<summary><b>View Query</b></summary>
+
+```sql
+SELECT *
+FROM vw_top_5_customers_revenue_by_year;
+```
+</details>
+
+---
+
+### 6. Which customers place orders most frequently?
+
+To answer this question, we calculate the average interval between consecutive orders for each customer, dividing them into quartiles based on their ordering frequency. Customers in the first and second quartiles are those who place orders most frequently. By analyzing these customers, we can identify patterns and potential opportunities for targeted marketing or loyalty programs aimed at increasing retention and order frequency. A sample of the results is presented in the table below.
+
+The analysis indicates that customers in the first quartile have average order intervals ranging from 18 to 45 days. These customers may have more consistent purchasing behaviors and represent valuable opportunities for ongoing engagement. Customers in the second quartile, with intervals between 46 and 66 days, also exhibit frequent purchasing patterns, though slightly less so than the first quartile. Focusing on these groups can help tailor marketing strategies to further encourage frequent purchases.
+
+| Customer                          | Avg. Order Interval (Days) | Quartile |
+|:----------------------------------|:--------------------------:|:--------:|
+| La corne d'abondance              | 18                         | 1        |
+| Save-a-lot Markets                | 19                         | 1        |
+| ...                               | ...                        | ...      |
+| Wartian Herkku                    | 45                         | 1        |
+| Lehmanns Marktstand               | 45                         | 1        |
+| Alfreds Futterkiste               | 46                         | 2        |
+| LILA-Supermercado                 | 49                         | 2        |
+| ...                               | ...                        | ...      |
+| Magazzini Alimentari Riuniti      | 66                         | 2        |
+| Godos Cocina Típica               | 66                         | 2        |
+
+<details>
+<summary><b>Full SQL Query</b></summary>
+
+```sql
+WITH customer_order_intervals AS (
+    SELECT
+        customer_id,
+        order_date - LAG(order_date) OVER (
+            PARTITION BY customer_id
+            ORDER BY order_date
+        ) AS order_interval -- Time between orders in days
+
+    FROM
+        orders
+),
+
+customer_avg_order_frequency_quartiles AS (
+    SELECT
+        customer_id,
+        AVG(order_interval) AS avg_order_interval,
+        NTILE(4) OVER (ORDER BY AVG(order_interval)) AS quartile
+
+    FROM
+        customer_order_intervals
+
+    WHERE
+        order_interval IS NOT NULL
+
+    GROUP BY
+        customer_id
+)
+
+SELECT
+    c.company_name AS "Customer",
+    CEIL(q.avg_order_interval) AS "Avg. Order Interval (Days)",
+    q.quartile AS "Quartile"
+
+FROM
+    customer_avg_order_frequency_quartiles q
+    JOIN customers c ON q.customer_id = c.customer_id
+
+WHERE
+    q.quartile IN (1, 2)
+
+ORDER BY
+    q.quartile,
+    q.avg_order_interval;
+```
+</details>
+
+<details>
+<summary><b>View Query</b></summary>
+
+```sql
+SELECT *
+FROM vw_most_frequent_customers;
+```
+</details>
 
 
 ## Employees Analysis
