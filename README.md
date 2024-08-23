@@ -193,7 +193,7 @@ WITH monthly_revenue AS
 
 SELECT
     month AS "Month",
-       ROUND(AVG(revenue), 2) AS "Average Revenue"
+    ROUND(AVG(revenue), 2) AS "Average Revenue"
 
 FROM
     monthly_revenue
@@ -202,7 +202,7 @@ GROUP BY
     month
 
 ORDER BY
-    avg_revenue DESC
+    "Average Revenue" DESC
 
 LIMIT 5;
 ```
@@ -570,12 +570,12 @@ SELECT
     CONCAT(e.first_name, ' ', e.last_name) AS "Employee",
     ROUND(oe.total_revenue::numeric, 2) AS "Revenue",
     ROUND(
-        oe.total_revenue::numeric / t.total_revenue * 100, 2
+        (oe.total_revenue / t.total_revenue * 100)::numeric, 2
     ) AS "Share of All Revenue (%)",
     RANK() OVER (ORDER BY oe.total_revenue DESC) AS "Rank by Revenue",
     oe.order_quantity AS "Orders",
     ROUND(
-        oe.order_quantity::numeric / t.total_order_quantity * 100, 2
+        (oe.order_quantity / t.total_order_quantity)::numeric * 100, 2
     ) AS "Share of All Orders (%)",
     RANK() OVER (ORDER BY oe.order_quantity DESC) AS "Rank by Quantity"
 
