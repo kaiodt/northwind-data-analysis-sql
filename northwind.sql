@@ -4227,7 +4227,7 @@ SELECT
     RANK() OVER (ORDER BY oe.total_revenue DESC) AS "Rank by Revenue",
     oe.order_quantity AS "Orders",
     ROUND(
-        (oe.order_quantity / t.total_order_quantity)::numeric * 100, 2
+        oe.order_quantity::numeric / t.total_order_quantity * 100, 2
     ) AS "Share of All Orders (%)",
     RANK() OVER (ORDER BY oe.order_quantity DESC) AS "Rank by Quantity"
 
