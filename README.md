@@ -512,7 +512,171 @@ FROM vw_most_frequent_customers;
 
 ## Employees Analysis
 
-TODO
+### 7. Which employees generated the highest revenue and handled the most orders in 1997?
+
+To answer this question, we identified the employees who generated the highest total revenue and handled the most orders in the year 1997. Then, we rank the employees based on these metrics to gain insights into the contributions of each one to the company’s overall performance. The results are summarized in the table below.
+
+The results show that **Margaret Peacock** led both in revenue generation and order handling, followed closely by **Janet Leverling** and **Nancy Davolio**. This information is valuable for understanding the top-performing employees and could guide decisions related to employee recognition, resource allocation, and performance improvement strategies.
+
+| Employee         | Revenue    | Share of All Revenue (%) | Rank by Revenue | Orders | Share of All Orders (%) | Rank by Quantity |
+|:-----------------|-----------:|-------------------------:|:---------------:|-------:|:-----------------------:|:----------------:|
+| Margaret Peacock | 128,809.79 | 20.87                    | 1               | 81     | 19.85                   | 1                |
+| Janet Leverling  | 108,026.16 | 17.51                    | 2               | 71     | 17.40                   | 2                |
+| Nancy Davolio    | 93,148.08  | 15.09                    | 3               | 55     | 13.48                   | 3                |
+| Andrew Fuller    | 70,444.14  | 11.42                    | 4               | 41     | 10.05                   | 5                |
+| Robert King      | 60,471.19  | 9.80                     | 5               | 36     | 8.82                    | 6                |
+| Laura Callahan   | 56,032.62  | 9.08                     | 6               | 54     | 13.24                   | 4                |
+| Michael Suyama   | 43,126.37  | 6.99                     | 7               | 33     | 8.09                    | 7                |
+| Steven Buchanan  | 30,716.47  | 4.98                     | 8               | 18     | 4.41                    | 9                |
+| Anne Dodsworth   | 26,310.39  | 4.26                     | 9               | 19     | 4.66                    | 8                |
+
+<details>
+<summary><b>Full SQL Query</b></summary>
+
+```sql
+WITH totals_1997 AS
+(
+    SELECT
+        COUNT(DISTINCT od.order_id) AS total_order_quantity,
+        SUM(od.quantity * od.unit_price * (1.0 - od.discount)) AS total_revenue
+
+    FROM
+        order_details od
+        JOIN orders o ON od.order_id = o.order_id
+
+    WHERE
+        EXTRACT(YEAR FROM o.order_date) = 1997
+),
+
+orders_by_employees AS
+(
+    SELECT
+        o.employee_id,
+        COUNT(DISTINCT od.order_id) AS order_quantity,
+        SUM(od.quantity * od.unit_price * (1.0 - od.discount)) AS total_revenue
+
+    FROM
+        order_details od
+        JOIN orders o ON od.order_id = o.order_id
+
+    WHERE
+        EXTRACT(YEAR FROM o.order_date) = 1997
+
+    GROUP BY
+        o.employee_id
+)
+
+SELECT
+    CONCAT(e.first_name, ' ', e.last_name) AS "Employee",
+    ROUND(oe.total_revenue::numeric, 2) AS "Revenue",
+    ROUND(
+        oe.total_revenue::numeric / t.total_revenue * 100, 2
+    ) AS "Share of All Revenue (%)",
+    RANK() OVER (ORDER BY oe.total_revenue DESC) AS "Rank by Revenue",
+    oe.order_quantity AS "Orders",
+    ROUND(
+        oe.order_quantity::numeric / t.total_order_quantity * 100, 2
+    ) AS "Share of All Orders (%)",
+    RANK() OVER (ORDER BY oe.order_quantity DESC) AS "Rank by Quantity"
+
+FROM
+    orders_by_employees oe
+    JOIN employees e ON oe.employee_id = e.employee_id
+    CROSS JOIN totals_1997 t;
+```
+</details>
+
+<details>
+<summary><b>View Query</b></summary>
+
+```sql
+SELECT *
+FROM vw_employee_performance_1997;
+```
+</details>
+
+---
+
+### 8. Which employees have the most consistent performance throughout the year?
+
+To determine which employees maintain consistent performance throughout the year, we analyze the standard deviation of their monthly revenue and the number of orders they handle each month. A lower standard deviation indicates more consistent performance, while a higher value suggests variability. By identifying employees with the lowest standard deviations in both revenue and order count, we can pinpoint those who consistently meet expectations without significant fluctuations. The results are presented in the table below.
+
+The analysis shows that **Michael Suyama** and **Steven Buchanan** exhibit the most consistent performance in terms of revenue and order count. Their standard deviations are significantly lower compared to others, indicating steady and reliable output. This information is valuable for recognizing dependable employees and possibly assigning them to critical roles that require consistent performance.
+
+| Employee         | Average Monthly Revenue | Revenue Std. Dev. | Average Monthly Orders | Orders Std. Dev. |
+|:-----------------|------------------------:|------------------:|-----------------------:|-----------------:|
+| Michael Suyama   | 3,519.67                | 2,456.20          | 3.19                   | 1.47             |
+| Steven Buchanan  | 3,821.79                | 3,289.35          | 2.33                   | 1.28             |
+| Anne Dodsworth   | 4,294.89                | 4,865.14          | 2.39                   | 1.54             |
+| Laura Callahan   | 5,515.75                | 4,925.09          | 4.52                   | 2.45             |
+| Margaret Peacock | 10,125.69               | 5,278.70          | 6.78                   | 3.01             |
+| Nancy Davolio    | 8,352.50                | 5,739.65          | 5.35                   | 2.82             |
+| Robert King      | 5,931.82                | 6,255.19          | 3.43                   | 2.13             |
+| Janet Leverling  | 9,218.77                | 6,926.75          | 5.77                   | 3.12             |
+| Andrew Fuller    | 7,240.77                | 7,340.03          | 4.17                   | 3.68             |
+
+<details>
+<summary><b>Full SQL Query</b></summary>
+
+```sql
+WITH monthly_employee_results AS (
+    SELECT
+        e.employee_id,
+        DATE_TRUNC('month', o.order_date) AS month,
+        SUM(od.quantity * od.unit_price * (1.0 - od.discount)) AS monthly_revenue,
+        COUNT(DISTINCT o.order_id) AS monthly_order_count
+
+    FROM
+        orders o
+        JOIN order_details od ON o.order_id = od.order_id
+        JOIN employees e ON o.employee_id = e.employee_id
+
+    GROUP BY
+        e.employee_id,
+        month
+),
+
+employee_performance_consistency AS (
+    SELECT
+        employee_id,
+        AVG(monthly_revenue) AS avg_monthly_revenue,
+        STDDEV(monthly_revenue) AS revenue_stddev,
+        AVG(monthly_order_count) AS avg_monthly_order_count,
+        STDDEV(monthly_order_count) AS order_count_stddev
+
+    FROM
+        monthly_employee_results
+        
+    GROUP BY
+        employee_id
+
+)
+
+SELECT
+    CONCAT(e.first_name, ' ', e.last_name) AS "Employee",
+    ROUND(ep.avg_monthly_revenue::numeric, 2) AS "Average Monthly Revenue",
+    ROUND(ep.revenue_stddev::numeric, 2) AS "Revenue Std. Dev.",
+    ROUND(ep.avg_monthly_order_count, 2) AS "Average Monthly Orders",
+    ROUND(ep.order_count_stddev, 2) AS "Orders Std. Dev."
+
+FROM
+    employee_performance_consistency ep
+    JOIN employees e ON ep.employee_id = e.employee_id
+
+ORDER BY
+    revenue_stddev;
+```
+</details>
+
+<details>
+<summary><b>View Query</b></summary>
+
+```sql
+SELECT *
+FROM vw_employee_performance_consistency;
+```
+</details>
+
 
 [⬆️ Back to navigation](#quick-navigation)
 
