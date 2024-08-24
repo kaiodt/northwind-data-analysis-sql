@@ -8,6 +8,8 @@ This analysis is conducted using [PostgreSQL](https://www.postgresql.org/), host
 
 The insights derived from this project can serve as a model for other companies looking to generate meaningful reports and enhance their strategic decisions.
 
+To run this project locally, check out the [Running the Project](#running-the-project) section for instructions.
+
 
 # Quick Navigation
 
@@ -680,8 +682,146 @@ FROM vw_employee_performance_consistency;
 
 [⬆️ Back to navigation](#quick-navigation)
 
+
 # Running the Project
 
-TODO
+## Pre-Installed PostgreSQL
+
+If you already have a working [PostgreSQL](https://www.postgresql.org/) instance, follow these steps to set up the Northwind database.
+
+
+### 1. Clone the Repository
+
+Begin by cloning this repository to your local machine:
+
+```bash
+git clone https://github.com/kaiodt/northwind-data-analysis-sql.git
+```
+
+### 2. Create a New Database (Optional)
+
+If you prefer to create a new database for the Northwind data, you can do so by running the following command in your PostgreSQL query tool or command line:
+
+```sql
+CREATE DATABASE northwind;
+```
+
+### 3. Execute the SQL Script
+
+Open your PostgreSQL query tool (e.g., pgAdmin, psql) connected to your desired database (either an existing one or the newly created `northwind` database). Then, execute the [`northwind.sql`](northwind.sql) script to create and populate all the necessary tables, views, and other database objects.
+
+
+## Running PostgreSQL and pgAdmin in Docker
+
+If you prefer to use [Docker](https://www.docker.com/) for setting up [PostgreSQL](https://www.postgresql.org/) and [pgAdmin](https://www.pgadmin.org/), follow these instructions.
+
+
+### Pre-Requisites
+
+Ensure you have [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/install/) installed on your system.
+
+
+### 1. Clone the Repository
+
+Begin by cloning this repository to your local machine:
+
+```bash
+git clone https://github.com/kaiodt/northwind-data-analysis-sql.git
+```
+
+### 2. Set Up Docker Containers
+
+- Navigate to the project directory:
+
+    ```bash
+    cd northwind-data-analysis-sql
+    ```
+
+- Use Docker Compose to start PostgreSQL and pgAdmin services:
+
+    ```bash
+    docker-compose up -d
+    ```
+
+- This will spin up two containers in the detached (`-d`) mode:
+
+    - `postgres-db`: The PostgreSQL database server.
+
+    - `pgadmin`: A web-based PostgreSQL administration tool.
+
+
+### 3. Access pgAdmin
+
+- Open your browser and go to http://localhost:5050 to access pgAdmin.
+
+    > You may need to wait a few seconds until this URL becomes available after starting the pgAdmin container.
+
+- If accessing pgAdmin for the first time, you might be asked to set a master password.
+
+- Then, log in with the credentials defined in the [docker-compose.yml](docker-compose.yaml) file:
+
+    - **Email Address**: `admin@admin.com`
+
+    - **Password**: `admin`
+
+
+### 4. Create a New Server in pgAdmin
+
+- After logging into pgAdmin, click the `Add New Server` button in the **Quick Links** section.
+
+- In the **General** tab, choose a name for the server, e.g., `northwind-server`. Leave the other fields unchanged.
+
+- In the **Connection** tab, fill in the following details:
+
+    - **Host name/address**: `postgres`
+
+    - **Port**: `5432`
+
+    - **Maintenance database**: `postgres`
+
+    - **Username**: `postgres`
+
+    - **Password**: `postgres`
+
+- Then, click the `Save` button.
+
+- The newly created server should appear under the `Servers` folder on the **Object Explorer** (left-hand side of the screen).
+
+- Under the new server, you'll find the `northwind` database containing all tables and views used in this project.
+
+
+### Stopping and Removing Containers
+
+To stop and remove the Docker containers created for the project, use the following command:
+
+```bash
+docker compose down
+```
+This command will stop and remove both the PostgreSQL and pgAdmin containers, as well as the associated network.
+
+Please note that the volumes `postgres_data` and `pgadmin_data` were created to persist the data for both PostgreSQL and pgAdmin, ensuring that your data remains intact even after the containers are removed. If you also wish to remove these volumes and delete the associated data, use the following command:
+
+```bash
+docker compose down --volumes
+```
+
+This command will stop and remove the containers, the network, and the persistent volumes, resulting in the deletion of all stored data. **Use this with caution, only if you no longer need the data.**
+
+
+## Running the Business Questions Views
+
+As mentioned in the [Business Questions](#business-questions) section, for each question, a view was created to generate the corresponding answer. Below you can find a table showing the view for each question:
+
+| Question                                                                                                                            | View Name                             |
+|:------------------------------------------------------------------------------------------------------------------------------------|:--------------------------------------|
+| [Question 1](#1-how-does-the-monthly-revenue-evolve-over-time)                                                                      | `vw_monthly_revenue_analysis`         |
+| [Question 2](#2-which-are-the-top-5-months-with-the-highest-average-monthly-revenue)                                                | `vw_top_5_avg_monthly_revenue`        |
+| [Question 3](#3-which-are-the-top-5-best-selling-products-by-quantity-and-what-categories-do-they-belong-to)                        | `vw_top_5_selling_products`           |
+| [Question 4](#4-which-are-the-top-5-products-generating-the-highest-revenue-and-what-categories-do-they-belong-to)                  | `vw_top_5_revenue_products`           |
+| [Question 5](#5-who-are-the-top-5-customers-by-yearly-revenue-share-and-how-does-their-contribution-compare-across-different-years) | `vw_top_5_customers_revenue_by_year`  |
+| [Question 6](#6-which-customers-place-orders-most-frequently)                                                                       | `vw_most_frequent_customers`          |
+| [Question 7](#7-which-employees-generated-the-highest-revenue-and-handled-the-most-orders-in-1997)                                  | `vw_employee_performance_1997`        |
+| [Question 8](#8-which-employees-have-the-most-consistent-performance-throughout-the-year)                                           | `vw_employee_performance_consistency` |
+
 
 [⬆️ Back to navigation](#quick-navigation)
